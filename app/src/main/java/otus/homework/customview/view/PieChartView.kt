@@ -25,9 +25,6 @@ class PieChartView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    private var widthMeasure = 0
-    private var heightMeasure = 0
-
     private var totalText: String? = null
 
     data class PieEntry(val value: Float, val category: String)
@@ -69,9 +66,28 @@ class PieChartView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        widthMeasure = MeasureSpec.getSize(widthMeasureSpec)
-        heightMeasure = MeasureSpec.getSize(heightMeasureSpec)
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        val width = MeasureSpec.getSize(widthMeasureSpec)
+        val height = MeasureSpec.getSize(heightMeasureSpec)
+        val modeWidth = MeasureSpec.getMode(widthMeasureSpec)
+        val modeHeight = MeasureSpec.getMode(heightMeasureSpec)
+
+        val desiredSize = 300
+        val finalWidth = when (modeWidth) {
+            MeasureSpec.EXACTLY -> width
+            MeasureSpec.AT_MOST -> minOf(desiredSize, width)
+            MeasureSpec.UNSPECIFIED -> desiredSize
+            else -> desiredSize
+        }
+
+        val finalHeight = when (modeHeight) {
+            MeasureSpec.EXACTLY -> height
+            MeasureSpec.AT_MOST -> minOf(desiredSize, height)
+            MeasureSpec.UNSPECIFIED -> desiredSize
+            else -> desiredSize
+        }
+
+        val size = minOf(finalWidth, finalHeight)
+        setMeasuredDimension(size, size)
     }
 
 
@@ -83,7 +99,7 @@ class PieChartView @JvmOverloads constructor(
         var startAngle = savedStartAngle
         val centerX = width / 2f
         val centerY = height / 2f
-        val radius = width / 2f * 0.9f
+        val radius = width / 2f * 0.85f
         val innerRadius = radius * CENTER_CIRCLE_PERS
 
         rectF.set(
@@ -109,7 +125,7 @@ class PieChartView @JvmOverloads constructor(
             startAngle += sweepAngle
         }
 
-        canvas.drawCircle(centerX, centerY, innerRadius, Paint().apply {
+        canvas.drawCircle(centerX, centerY, innerRadius, paint.apply {
             color = Color.WHITE
         })
 
