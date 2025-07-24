@@ -6,8 +6,8 @@
     android:gravity="center">
 
 
-    <otus.homework.customview.view.PieChartView
-        android:id="@+id/pie_chart"
+    <otus.homework.customview.view.GraphicPaymentCategoryView
+        android:id="@+id/graphic"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
