@@ -31,6 +31,8 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
         textSize = 24f
     }
 
+    private val path = Path()
+
     private val colorList = ArrayList<Int>(10).apply {
         add(context.getColor(R.color.blue))
         add(context.getColor(R.color.pink_light))
@@ -44,35 +46,18 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
         add(context.getColor(R.color.yellow))
     }
 
-    private var savedColorIndex = 0
-
     fun setCategoryData(data: Map<String, List<CategoryPoint>>) {
         categoryData = data
         invalidate()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
-        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
-        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
-        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
-
         val desiredWidth = 600
         val desiredHeight = 400
 
-        val width = when (widthMode) {
-            MeasureSpec.EXACTLY -> widthSize
-            MeasureSpec.AT_MOST -> minOf(desiredWidth, widthSize)
-            MeasureSpec.UNSPECIFIED -> desiredWidth
-            else -> desiredWidth
-        }
+        val width = resolveSize(desiredWidth, widthMeasureSpec)
 
-        val height = when (heightMode) {
-            MeasureSpec.EXACTLY -> heightSize
-            MeasureSpec.AT_MOST -> minOf(desiredHeight, heightSize)
-            MeasureSpec.UNSPECIFIED -> desiredHeight
-            else -> desiredHeight
-        }
+        val height = resolveSize(desiredHeight, heightMeasureSpec)
 
         setMeasuredDimension(width, height)
     }
@@ -81,10 +66,8 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         val legendStartY = 10f
         var legendOffsetY = 0f
-        var legendColorIndex = 0
-        categoryData.keys.forEach { category ->
+        categoryData.keys.forEachIndexed { legendColorIndex, category ->
             val color = colorList[legendColorIndex % colorList.size]
-            legendColorIndex++
             val left = width - 200f
             val top = legendStartY + legendOffsetY
             val size = 20f
@@ -129,14 +112,12 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
             canvas.drawText(label, x, height.toFloat() - 10f, axisPaint)
         }
 
-        var colorIndex = 0
-        categoryData.forEach { (category, points) ->
+        categoryData.values.forEachIndexed { colorIndex, points ->
+            path.reset()
             paint.style = Paint.Style.STROKE
             paint.strokeWidth = 6f
             paint.color = colorList[colorIndex % colorList.size]
-            colorIndex++
 
-            val path = Path()
             points.sortedBy { it.day }.forEachIndexed { index, point ->
                 val x = chartLeft + ((point.day - minDay).toFloat() / totalDays) * chartWidth
                 val y = chartBottom - (point.amount / maxY) * chartHeight
@@ -150,13 +131,11 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
         val superState = super.onSaveInstanceState()
         val bundle = Bundle()
         bundle.putParcelable("superState", superState)
-        bundle.putInt("savedColorIndex", savedColorIndex)
         return bundle
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
-            savedColorIndex = state.getInt("savedColorIndex", 0)
             super.onRestoreInstanceState(state.getParcelable("superState"))
         } else {
             super.onRestoreInstanceState(state)

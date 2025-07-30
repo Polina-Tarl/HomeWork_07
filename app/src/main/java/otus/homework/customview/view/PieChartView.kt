@@ -26,6 +26,7 @@ class PieChartView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private var totalText: String? = null
+    private var onCategoryClickListener: ((PieEntry) -> Unit)? = null
 
     data class PieEntry(val value: Float, val category: String)
 
@@ -54,7 +55,6 @@ class PieChartView @JvmOverloads constructor(
     }
     private val rectF = RectF()
     private val paint = Paint()
-    private var savedStartAngle = 0f
 
     init {
         Log.i("PieChartView", "hashCode=${hashCode()} created")
@@ -66,25 +66,10 @@ class PieChartView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val width = MeasureSpec.getSize(widthMeasureSpec)
-        val height = MeasureSpec.getSize(heightMeasureSpec)
-        val modeWidth = MeasureSpec.getMode(widthMeasureSpec)
-        val modeHeight = MeasureSpec.getMode(heightMeasureSpec)
-
         val desiredSize = 300
-        val finalWidth = when (modeWidth) {
-            MeasureSpec.EXACTLY -> width
-            MeasureSpec.AT_MOST -> minOf(desiredSize, width)
-            MeasureSpec.UNSPECIFIED -> desiredSize
-            else -> desiredSize
-        }
+        val finalWidth = resolveSize(desiredSize, widthMeasureSpec)
 
-        val finalHeight = when (modeHeight) {
-            MeasureSpec.EXACTLY -> height
-            MeasureSpec.AT_MOST -> minOf(desiredSize, height)
-            MeasureSpec.UNSPECIFIED -> desiredSize
-            else -> desiredSize
-        }
+        val finalHeight = resolveSize(desiredSize, heightMeasureSpec)
 
         val size = minOf(finalWidth, finalHeight)
         setMeasuredDimension(size, size)
@@ -96,7 +81,7 @@ class PieChartView @JvmOverloads constructor(
         if (entries.isEmpty()) return
 
         val total = entries.sumOf { it.value.toDouble() }.toFloat()
-        var startAngle = savedStartAngle
+        var startAngle = 0f
         val centerX = width / 2f
         val centerY = height / 2f
         val radius = width / 2f * 0.85f
@@ -142,6 +127,15 @@ class PieChartView @JvmOverloads constructor(
         )
     }
 
+    fun setOnCategoryClickListener(listener: (PieEntry) -> Unit) {
+        onCategoryClickListener = listener
+    }
+
+    fun setTotalText(newText: String) {
+        totalText = newText
+        invalidate()
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action != MotionEvent.ACTION_DOWN) return false
@@ -158,16 +152,12 @@ class PieChartView @JvmOverloads constructor(
         val touchAngle = (Math.toDegrees(atan2(y.toDouble(), x.toDouble())) + 360) % 360
 
         val total = entries.sumOf { it.value.toDouble() }.toFloat()
-        var startAngle = savedStartAngle
+        var startAngle = 0f
 
-        entries.forEachIndexed { index, entry ->
+        entries.forEach { entry ->
             val sweepAngle = (entry.value / total) * CIRCLE_DEGREE
             if (touchAngle >= startAngle && touchAngle < startAngle + sweepAngle) {
-                val categoryAmount = context.getString(
-                    R.string.total_amount_center, "%.2f".format(entry.value)
-                )
-                totalText = entry.category + " " + categoryAmount
-                invalidate()
+                onCategoryClickListener?.invoke(entry)
                 return true
             }
             startAngle += sweepAngle
@@ -179,17 +169,22 @@ class PieChartView @JvmOverloads constructor(
         val superState = super.onSaveInstanceState()
         val bundle = Bundle()
         bundle.putParcelable("superState", superState)
-        bundle.putFloat("startAngle", savedStartAngle)
+        bundle.putString("totalText", totalText)
         return bundle
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
-            savedStartAngle = state.getFloat("startAngle", 0f)
+            totalText = state.getString("totalText", null)
             super.onRestoreInstanceState(state.getParcelable("superState"))
         } else {
             super.onRestoreInstanceState(state)
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        Log.i("PieChartView", "hashCode=${hashCode()} onDetachedFromWindow")
+        super.onDetachedFromWindow()
     }
 
     companion object {
