@@ -13,6 +13,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import otus.homework.customview.R
+import otus.homework.customview.utils.dpToPx
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -66,7 +67,7 @@ class PieChartView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val desiredSize = 300
+        val desiredSize = MESURE_SIZE.dpToPx(resources)
         val finalWidth = resolveSize(desiredSize, widthMeasureSpec)
 
         val finalHeight = resolveSize(desiredSize, heightMeasureSpec)
@@ -194,5 +195,6 @@ class PieChartView @JvmOverloads constructor(
         private const val TEXT_SIZE_PERS = 30f
         private const val PADDING_PERS = 40
         private const val CENTER_CIRCLE_PERS = 0.6f
+        private const val MESURE_SIZE = 300f
     }
 }

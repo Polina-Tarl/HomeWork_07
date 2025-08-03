@@ -10,15 +10,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        supportFragmentManager
-            .beginTransaction()
-            .replace(
-                R.id.fragmentContainer,
-                CirclePaymentCategoryFragment(),
-                "CirclePaymentCategoryFragment"
-            )
-            .addToBackStack(null)
-            .commit()
+        if (savedInstanceState == null)
+            supportFragmentManager
+                .beginTransaction()
+                .replace(
+                    R.id.fragmentContainer,
+                    CirclePaymentCategoryFragment(),
+                    "CirclePaymentCategoryFragment"
+                )
+                .addToBackStack(null)
+                .commit()
 
         val button = findViewById<Button>(R.id.button_next)
 

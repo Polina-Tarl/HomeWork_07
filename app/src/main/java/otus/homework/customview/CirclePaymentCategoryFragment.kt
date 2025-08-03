@@ -3,21 +3,12 @@ package otus.homework.customview
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import org.json.JSONArray
+import kotlinx.serialization.json.Json
+import otus.homework.customview.model.TransactionJson
 import otus.homework.customview.view.PieChartView
 import otus.homework.customview.view.PieChartView.PieEntry
 
 class CirclePaymentCategoryFragment : Fragment(R.layout.fragment_circle_payment_category) {
-
-    private val pieChartItems = listOf(
-        PieEntry(5000f, "Кошка"),
-        PieEntry(25000f, "Продукты"),
-        PieEntry(10000f, "Развлечения"),
-        PieEntry(5000f, "Еда вне дома"),
-        PieEntry(2300f, "Медицина"),
-        PieEntry(4000f, "Транспорт"),
-        PieEntry(1200f, "Подписки"),
-    )
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -39,13 +30,15 @@ class CirclePaymentCategoryFragment : Fragment(R.layout.fragment_circle_payment_
     }
 
     private fun parsePayload(jsonString: String): List<PieEntry> {
-        val jsonArray = JSONArray(jsonString)
+        val jsonParser = Json { ignoreUnknownKeys = true }
+
+        val transactions: List<TransactionJson> = jsonParser.decodeFromString(jsonString)
+
         val categorySums = mutableMapOf<String, Float>()
 
-        for (i in 0 until jsonArray.length()) {
-            val obj = jsonArray.getJSONObject(i)
-            val category = obj.getString("category")
-            val amount = obj.getDouble("amount").toFloat()
+        transactions.forEach { transaction ->
+            val category = transaction.category
+            val amount = transaction.amount
             categorySums[category] = (categorySums[category] ?: 0f) + amount
         }
 

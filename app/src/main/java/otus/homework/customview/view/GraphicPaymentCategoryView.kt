@@ -11,6 +11,7 @@ import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.View
 import otus.homework.customview.R
+import otus.homework.customview.utils.dpToPx
 
 class GraphicPaymentCategoryView @JvmOverloads constructor(
     context: Context,
@@ -52,8 +53,8 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val desiredWidth = 600
-        val desiredHeight = 400
+        val desiredWidth = DESIRED_WIDTH.dpToPx(resources)
+        val desiredHeight = DESIRED_HEIGHT.dpToPx(resources)
 
         val width = resolveSize(desiredWidth, widthMeasureSpec)
 
@@ -140,6 +141,11 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
         } else {
             super.onRestoreInstanceState(state)
         }
+    }
+
+    companion object {
+        private const val DESIRED_WIDTH = 600f
+        private const val DESIRED_HEIGHT = 400f
     }
 }
 
