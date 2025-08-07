@@ -1,5 +1,6 @@
 package otus.homework.customview.view
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -18,6 +19,9 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    private var legendAlpha = 0f
+    private var legendAnimator: ValueAnimator? = null
 
     data class CategoryPoint(val day: Int, val amount: Float)
 
@@ -49,6 +53,8 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
 
     fun setCategoryData(data: Map<String, List<CategoryPoint>>) {
         categoryData = data
+        legendAlpha = 0f
+        startLegendAnimation()
         invalidate()
     }
 
@@ -65,22 +71,6 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
 
     @SuppressLint("DefaultLocale", "DrawAllocation")
     override fun onDraw(canvas: Canvas) {
-        val legendStartY = 10f
-        var legendOffsetY = 0f
-        categoryData.keys.forEachIndexed { legendColorIndex, category ->
-            val color = colorList[legendColorIndex % colorList.size]
-            val left = width - 200f
-            val top = legendStartY + legendOffsetY
-            val size = 20f
-
-            paint.color = color
-            paint.style = Paint.Style.FILL
-            canvas.drawRect(left, top, left + size, top + size, paint)
-
-            axisPaint.color = Color.GRAY
-            canvas.drawText(category, left + size + 10f, top + size, axisPaint)
-            legendOffsetY += 30f
-        }
         super.onDraw(canvas)
         if (categoryData.isEmpty()) return
 
@@ -126,6 +116,7 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
             }
             canvas.drawPath(path, paint)
         }
+        drawLegendTopRight(canvas)
     }
 
     override fun onSaveInstanceState(): Parcelable? {
@@ -140,6 +131,42 @@ class GraphicPaymentCategoryView @JvmOverloads constructor(
             super.onRestoreInstanceState(state.getParcelable("superState"))
         } else {
             super.onRestoreInstanceState(state)
+        }
+    }
+
+    private fun startLegendAnimation() {
+        legendAnimator?.cancel()
+        legendAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 1000
+            startDelay = 300 // ждём пока график отрисуется
+            addUpdateListener {
+                legendAlpha = it.animatedValue as Float
+                invalidate()
+            }
+            start()
+        }
+    }
+
+    private fun drawLegendTopRight(canvas: Canvas) {
+        val legendStartY = 10f
+        var legendOffsetY = 0f
+
+        categoryData.keys.forEachIndexed { legendColorIndex, category ->
+            val color = colorList[legendColorIndex % colorList.size]
+            val left = width - 350f
+            val top = legendStartY + legendOffsetY
+            val size = 32f
+
+            paint.color = color
+            paint.style = Paint.Style.FILL
+            paint.alpha = (legendAlpha * 255).toInt()
+            canvas.drawRect(left, top, left + size, top + size, paint)
+
+            axisPaint.color = Color.GRAY
+            axisPaint.textSize = size
+            axisPaint.alpha = (legendAlpha * 255).toInt()
+            canvas.drawText(category, left + size + 10f, top + size, axisPaint)
+            legendOffsetY += 40f
         }
     }
 

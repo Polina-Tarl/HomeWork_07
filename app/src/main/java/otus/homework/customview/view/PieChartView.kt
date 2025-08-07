@@ -1,5 +1,6 @@
 package otus.homework.customview.view
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
@@ -28,6 +29,8 @@ class PieChartView @JvmOverloads constructor(
 
     private var totalText: String? = null
     private var onCategoryClickListener: ((PieEntry) -> Unit)? = null
+
+    private var animatedSweep = 0f
 
     data class PieEntry(val value: Float, val category: String)
 
@@ -63,7 +66,7 @@ class PieChartView @JvmOverloads constructor(
 
     fun setEntriesItems(items: List<PieEntry>) {
         entries = items
-        invalidate()
+        startAnimationAngle()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -96,7 +99,7 @@ class PieChartView @JvmOverloads constructor(
         )
 
         entries.forEachIndexed { index, entry ->
-            val sweepAngle = (entry.value / total) * CIRCLE_DEGREE
+            val sweepAngle = (entry.value / total) * CIRCLE_DEGREE * animatedSweep
             paint.color = colorList.getOrElse(
                 index % colorList.size,
                 defaultValue = { context.getColor(R.color.yellow) }
@@ -186,6 +189,16 @@ class PieChartView @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         Log.i("PieChartView", "hashCode=${hashCode()} onDetachedFromWindow")
         super.onDetachedFromWindow()
+    }
+
+    private fun startAnimationAngle() {
+        val animator = ValueAnimator.ofFloat(0f, 1f)
+        animator.duration = 2500
+        animator.addUpdateListener {
+            animatedSweep = it.animatedValue as Float
+            invalidate()
+        }
+        animator.start()
     }
 
     companion object {

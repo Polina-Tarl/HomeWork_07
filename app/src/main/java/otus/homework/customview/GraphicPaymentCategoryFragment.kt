@@ -3,6 +3,7 @@ package otus.homework.customview
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
+import com.google.android.material.transition.MaterialFadeThrough
 import kotlinx.serialization.json.Json
 import otus.homework.customview.model.TransactionJson
 import otus.homework.customview.view.GraphicPaymentCategoryView
@@ -17,6 +18,16 @@ class GraphicPaymentCategoryFragment : Fragment(R.layout.fragment_graphic_paymen
             this.resources.openRawResource(R.raw.payload).bufferedReader().use { it.readText() }
 
         pieChartView.setCategoryData(parsePayload(jsonString))
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enterTransition = MaterialFadeThrough().apply {
+            duration = FRAGMENT_ANIMATE_DURATION
+        }
+        exitTransition = MaterialFadeThrough().apply {
+            duration = FRAGMENT_ANIMATE_DURATION
+        }
     }
 
     private fun parsePayload(
@@ -41,6 +52,10 @@ class GraphicPaymentCategoryFragment : Fragment(R.layout.fragment_graphic_paymen
                 keySelector = { it.first },
                 valueTransform = { it.second }
             )
+    }
+
+    companion object {
+        private const val FRAGMENT_ANIMATE_DURATION = 300L
     }
 
 }
